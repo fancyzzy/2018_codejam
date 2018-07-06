@@ -353,7 +353,7 @@ def execTest():
 			elif re == 1 and cost_time < timeMsLimit:
 				case_passed += 1
 				score += case_score
-				print "Passed! {0}ms".format(cost_time)
+				print "'Passed!' {0}ms".format(cost_time)
 				time_used.append(cost_time)
 			else:
 				print "'DEBUG:It could not happen'"
@@ -420,3 +420,11 @@ if __name__ == '__main__':
 
 	execTest()
 
+
+	n = raw_input("\nDo you want to generate the report? (y/n): ")
+	if n == 'y' or n == 'Y':
+		print("Report feature to be done...")
+	else:
+		pass
+
+	print("done")
