@@ -1,0 +1,5 @@
+abcdefghijklmnopqrstuvwxyz
+aabcdefghijklmnopqrstuvwxyz
+
+#RES:a
+#SCORE:10
