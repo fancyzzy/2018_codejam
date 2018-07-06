@@ -97,10 +97,7 @@ def callProc(cmd, inStr, outStr):
 
 	#Right answers prior to errors
 	if cmp(outStr, realOutStr)!=0:
-		print "Expect:", outStr
-		print "Result:", realOutStr
 		if outStr in realOutStr:
-			print("warning")
 			return result,realOutStr,errStr
 		else:
 			result = 0
@@ -120,7 +117,7 @@ def callProc(cmd, inStr, outStr):
 
 
 def execTest():
-	timeMsLimit = 2000	# 1000ms = 1S
+	timeMsLimit = 1500	# 1000ms = 1S
 	#These dir can be used only after the system environment configured.
 	#Check out the readme to see how to set system environment variables.
 	python2Dir = 'python2'
@@ -182,9 +179,8 @@ def execTest():
 
 		if '.py' in exe_file:
 			#pythnon2,3 auto running: py -2 xxxpy2.py or py -3 xxxpy3.py
-			#if 'py3' in exe_file or '3.' in exe_file \
-			#or '3' in exe_file.replace('32','').replace('q3','').replace('Q3','').replace('.3',''):
-			if 'python3' in exe_file:
+			if 'py3' in exe_file or '3.' in exe_file \
+			or '3' in exe_file.replace('32','').replace('q3','').replace('Q3','').replace('.3',''):
 				cmd = [python3Dir,exe_file]
 				language = "Python3"
 			else:
