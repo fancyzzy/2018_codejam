@@ -10,6 +10,7 @@ import openpyxl
 from openpyxl.styles import PatternFill
 from openpyxl.utils import get_column_letter
 
+from six import string_types
 
 Run_In_Detail = False
 
@@ -22,8 +23,9 @@ def addTestCase(caseDir, case_list):
 	filelist = os.listdir('.')
 	file_list = []
 	for i in range(len(filelist)):
-		num = re.findall(r'\d+',filelist[i])[0]
-		file_list.append((filelist[i],int(num)))
+		num = re.findall(r'\d+',filelist[i])
+		if len(num) != 0:
+			file_list.append((filelist[i],int(num[0])))
 
 	#sort according to the number in the Case name
 	file_list = sorted(file_list, key=lambda x:x[1])
@@ -51,6 +53,63 @@ def addTestCase(caseDir, case_list):
 
 		finally:
 			caseFile.close()
+	#print("DEBUG case_list :{}".format(case_list))
+
+	#Use excel to add test cases:	
+	#os.chdir(caseDir.strip('case'))
+	test_case_list = []
+	case_file_name = 'testcases.xlsx'
+	case_file = os.path.join(caseDir.strip('case'),case_file_name)
+	#print("DEBUG case_file: {}".format(case_file))
+
+	wb = openpyxl.load_workbook(case_file, data_only=True)
+	sheets = wb.sheetnames[:]
+	#find the case sheet and the col, row
+	fields = ['Index', 'Input', 'Expected', 'Score']
+	row_range = 10
+	column_range = 10
+	base_row = None
+	base_col = None
+	base_ws = None
+	have_found = False
+	for sheet in sheets:
+		for i in range(1, row_range):
+			for j in range(1, column_range):
+				v = wb[sheet].cell(row=i, column=j).value
+				v_next = wb[sheet].cell(row=i, column=j+1).value
+				if isinstance(v, string_types) and isinstance(v_next, string_types):
+					if  'input' in v.lower() and 'expect' in v_next.lower(): 
+						have_found = True
+						base_row = i
+						base_col = j
+						base_ws = wb[sheet]
+
+	if not have_found:
+		print("No Test cases info found (search column fields like: input, expect)!")
+		return []
+	else:
+
+		case_max = 20
+		n = 0
+		for i in range(1, case_max+1):
+			input_v = base_ws.cell(row=base_row+i, column=base_col).value
+			expected_v = base_ws.cell(row=base_row+i, column=base_col+1).value
+			if input_v == None and expected_v == None:
+				break
+			else:
+				input_v = str(input_v)
+				expected_v = str(expected_v)
+				score_v = base_ws.cell(row=base_row+i, column=base_col+2).value
+				if score_v != None and isinstance(score_v, string_types) and\
+				score_v.isdigit():
+					score_v = int(score_v)
+			test_case_list.append(('case%d'%i, input_v, expected_v, score_v))
+
+
+		#print("DEBUG test_case_list = {}".format(test_case_list))
+	return test_case_list
+
+
 ##########add_test_cases()##############################
 
 
@@ -166,16 +225,24 @@ def execTest():
 	#Get all the to-be-test sourcecode/exe files
 	exe_file_list = addExe(exeDir)
 	#print("DEBUGF exe_file_list: {}".format(exe_file_list))
-	print("Got {} to-be-test files from {}".format(len(exe_file_list), exeDir))
+	print("Got {} to-be-test files from '{}'".format(len(exe_file_list), exeDir))
 
 	case_list = []
 	#case_list = [(case_name,input,output,score)]
-	addTestCase(testCaseDir, case_list)
+
+	test_case_list = addTestCase(testCaseDir, case_list)
+	if len(test_case_list) == 0 and len(case_list) == 0:
+		print("No test cases.")
+		exit()
+
+	if len(test_case_list) != 0:
+		case_list = test_case_list
+
 	case_total = len(case_list)	
 	file_total = len(exe_file_list)
 	score_total = sum([item[-1] for item in case_list])
 
-	print("Prepared {} test cases, {} total points from {}".\
+	print("Prepared {} test cases, {} total points from '{}'".\
 		format(case_total, score_total, testCaseDir))
 
 
@@ -438,8 +505,6 @@ def gen_report(res_list):
 	'''
 	Generate the result report in xlsx
 	'''
-	print(os.getcwd())
-
 	report_name = "result.xlsx"
 	report_path = os.path.join(os.getcwd(), report_name)
 
@@ -488,7 +553,7 @@ def gen_report(res_list):
 	#save after the file is closed	
 	wb.save(report_name)
 
-	print("Report is generated in {}".format(report_path))
+	print("Report is generated in '{}'".format(report_path))
 ##########gen_report()#################################
 
 
