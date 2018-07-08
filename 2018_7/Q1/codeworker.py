@@ -7,11 +7,17 @@ import time
 import re
 from threading import Timer
 import openpyxl
+from openpyxl.styles import PatternFill
+from openpyxl.utils import get_column_letter
 
 
 Run_In_Detail = False
 
+
 def addTestCase(caseDir, case_list):
+	'''
+	Add all the test cases
+	'''
 	os.chdir(caseDir)
 	filelist = os.listdir('.')
 	file_list = []
@@ -45,9 +51,13 @@ def addTestCase(caseDir, case_list):
 
 		finally:
 			caseFile.close()
+##########add_test_cases()##############################
+
 
 def addExe(exeDir):
-
+	'''
+	List all the to be tested files
+	'''
 
 	ignore_suffix = ['.xlsx', '.docx', '.pptx', '.db']
 
@@ -173,8 +183,7 @@ def execTest():
 	case_result_list = []
 	submit_total = 0
 
-	print "Start processing %d tests in 'case'"%(case_total),
-	print "%d files in 'exe' :"%(len(exe_file_list))
+	print("Start processing...")
  	os.chdir(exeDir)
 	# beging to loop everyone's code submission
 	for exe_file in exe_file_list:
@@ -419,12 +428,13 @@ def execTest():
 		print
 	print "-"*90
 
-	print "{} submissions checked, {} passed.".format(submit_total,pass_num)
-
+	print "{} submissions checked, {} totally passed.".format(submit_total,pass_num)
 	return case_result_list
 
+########################
 
-def gen_report():
+
+def gen_report(res_list):
 	'''
 	Generate the result report in xlsx
 	'''
@@ -439,50 +449,64 @@ def gen_report():
 	else:
 		wb = openpyxl.load_workbook(report_name, data_only=True)
 
-
-	print("Debug: ", wb.sheetnames)
-
 	#Generate time as the sheet name:
 	sheet_name = time.strftime("%Y%m%d_%H%M%S")
-	print("DEBUG sheet_name: {}".format(sheet_name))
-
 	ws_new = wb.create_sheet(sheet_name, 0)
 
 	#get results
-
-
+	fields = ['Index', 'File_Name', 'Language', 'Score', 'Run_Time', 'State']
+	ln_fields = len(fields)
+	ln_res = len(res_list)
 	#write results
-	c = ws_new['A4']
-	ws_new['A4'] = 4
+	start_row = 2
+	start_col = 1
+	redFill = PatternFill(start_color='92D050', end_color='92D050',\
+                   fill_type='solid')
+	for j in range(ln_fields):
+		#ws_new.cell(column=start_col + j, row=start_row, value=fields[j])
+		ws_new.cell(row=start_row, column=start_col+j).value = fields[j]
+		ws_new.cell(row=start_row, column=start_col+j).fill = redFill
 
+
+	for i in range(ln_res):
+		one_res = res_list[i]
+		for j in range(ln_fields-1):
+			ws_new.cell(column=start_col, row=start_row + 1 + i, value=i+1)
+			ws_new.cell(column=start_col + 1 + j, row=start_row + 1 + i, \
+				value=one_res[j])
+
+	#set column width
+	for j in range(ln_fields):
+		width_value = 10
+		if j == 1 or j == 5:
+			width_value = 50
+		else:
+			pass
+		i = get_column_letter(j+1)
+		ws_new.column_dimensions[i].width = width_value
+
+	#save after the file is closed	
 	wb.save(report_name)
 
 	print("Report is generated in {}".format(report_path))
 ##########gen_report()#################################
 
 
-
-
-
-
-
 if __name__ == '__main__':
 
-	n = raw_input("Run in detail? (y/n): ")
+	n = raw_input("Run in details? (y/n): ")
 	if n == 'y' or n == 'Y':
 		Run_In_Detail = True
 	else:
 		Run_In_Detail = False
 
 	res_list = execTest()
-	print("DEBUG res_list :{}".format(res_list))
 
-
-	n = raw_input("\nDo you want to generate the report? (y/n): ")
+	n = raw_input("\nDo you want to generate/update the report? (y/n): \n(Close it if alreay opened by the Excel app)")
 	if 'y' in n.strip() or n.strip() == 'Y':
-		print("Report feature to be done...")
-		gen_report()
+		gen_report(res_list)
 	else:
 		pass
 
-	print("done")
+
+	print("Done")
