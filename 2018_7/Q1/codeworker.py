@@ -6,7 +6,7 @@ import os
 import time
 import re
 from threading import Timer
-
+import openpyxl
 
 
 Run_In_Detail = False
@@ -48,7 +48,11 @@ def addTestCase(caseDir, case_list):
 
 def addExe(exeDir):
 
-	return os.listdir(exeDir)
+
+	ignore_suffix = ['.xlsx', '.docx', '.pptx', '.db']
+
+	return [f for f in os.listdir(exeDir) if (not f.startswith('.') and  \
+	os.path.splitext(f)[1] not in ignore_suffix)]
 
 
 #feature: terminalt after timeout begin
@@ -149,7 +153,10 @@ def execTest():
 	testCaseDir = os.path.join(os.getcwd(),'case')
 	#Felix change the path end
 
+	#Get all the to-be-test sourcecode/exe files
 	exe_file_list = addExe(exeDir)
+	#print("DEBUGF exe_file_list: {}".format(exe_file_list))
+	print("Got {} to-be-test files from {}".format(len(exe_file_list), exeDir))
 
 	case_list = []
 	#case_list = [(case_name,input,output,score)]
@@ -158,12 +165,16 @@ def execTest():
 	file_total = len(exe_file_list)
 	score_total = sum([item[-1] for item in case_list])
 
+	print("Prepared {} test cases, {} total points from {}".\
+		format(case_total, score_total, testCaseDir))
+
+
 	#case_result_list =[(code_name,language,score,run_time,state)]
 	case_result_list = []
 	submit_total = 0
 
-	print "%d tests in 'case'"%(case_total),
-	print "%d files in 'exe'"%(len(exe_file_list))
+	print "Start processing %d tests in 'case'"%(case_total),
+	print "%d files in 'exe' :"%(len(exe_file_list))
  	os.chdir(exeDir)
 	# beging to loop everyone's code submission
 	for exe_file in exe_file_list:
@@ -410,6 +421,51 @@ def execTest():
 
 	print "{} submissions checked, {} passed.".format(submit_total,pass_num)
 
+	return case_result_list
+
+
+def gen_report():
+	'''
+	Generate the result report in xlsx
+	'''
+	print(os.getcwd())
+
+	report_name = "result.xlsx"
+	report_path = os.path.join(os.getcwd(), report_name)
+
+	if  not os.path.exists(report_name):
+		wb = openpyxl.Workbook(write_only=False)
+		wb.title = report_name
+	else:
+		wb = openpyxl.load_workbook(report_name, data_only=True)
+
+
+	print("Debug: ", wb.sheetnames)
+
+	#Generate time as the sheet name:
+	sheet_name = time.strftime("%Y%m%d_%H%M%S")
+	print("DEBUG sheet_name: {}".format(sheet_name))
+
+	ws_new = wb.create_sheet(sheet_name, 0)
+
+	#get results
+
+
+	#write results
+	c = ws_new['A4']
+	ws_new['A4'] = 4
+
+	wb.save(report_name)
+
+	print("Report is generated in {}".format(report_path))
+##########gen_report()#################################
+
+
+
+
+
+
+
 if __name__ == '__main__':
 
 	n = raw_input("Run in detail? (y/n): ")
@@ -418,12 +474,14 @@ if __name__ == '__main__':
 	else:
 		Run_In_Detail = False
 
-	execTest()
+	res_list = execTest()
+	print("DEBUG res_list :{}".format(res_list))
 
 
 	n = raw_input("\nDo you want to generate the report? (y/n): ")
-	if n == 'y' or n == 'Y':
+	if 'y' in n.strip() or n.strip() == 'Y':
 		print("Report feature to be done...")
+		gen_report()
 	else:
 		pass
 
