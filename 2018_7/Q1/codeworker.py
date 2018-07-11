@@ -63,7 +63,11 @@ def addTestCase(caseDir, case_list):
     case_file = os.path.join(caseDir.strip('case'),case_file_name)
     #print("DEBUG case_file: {}".format(case_file))
 
-    wb = openpyxl.load_workbook(case_file, data_only=True)
+    wb = None
+    try:
+        wb = openpyxl.load_workbook(case_file, data_only=True)
+    except:
+        return []
     sheets = wb.sheetnames[:]
     #find the case sheet and the col, row
     fields = ['Index', 'Input', 'Expected', 'Score']
@@ -233,12 +237,16 @@ def execTest():
     #case_list = [(case_name,input,output,score)]
 
     test_case_list = addTestCase(testCaseDir, case_list)
-    if len(test_case_list) == 0 and len(case_list) == 0:
+    if (not test_case_list and not case_list) or (len(test_case_list) == 0 and len(case_list) == 0):
         print("No test cases.")
         exit()
 
     if len(test_case_list) != 0:
         case_list = test_case_list
+        case_file_name = 'testcases.xlsx'
+        case_file = os.path.join(testCaseDir.strip('case'),case_file_name)
+        testCaseDir = case_file
+
 
     case_total = len(case_list)    
     file_total = len(exe_file_list)
