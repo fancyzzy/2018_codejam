@@ -186,7 +186,11 @@ def callProc(cmd, inStr, outStr, trial_run = False):
     #get rid of '\n\r' in windows
     realOutStr = realOutStr.strip(os.linesep)
 
-    #Right answers prior to errors
+    #Right answers are inferior to errors
+    if errStr != '':
+        result = 0
+        return result,realOutStr,errStr
+
     if cmp(outStr, realOutStr)!=0:
         '''
         if Run_In_Detail and not trial_run:
@@ -200,9 +204,6 @@ def callProc(cmd, inStr, outStr, trial_run = False):
     else:
         return result,realOutStr,errStr
 
-    if errStr != '':
-        result = 0
-        return result,realOutStr,errStr
 
     #timer expired accounted as TLE
     if len(f) == 1 and f[0] == 'expiry':
