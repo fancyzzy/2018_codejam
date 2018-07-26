@@ -126,7 +126,7 @@ def addExe(exeDir):
     ignore_suffix = ['.xlsx', '.docx', '.pptx', '.db']
 
     return [f for f in os.listdir(exeDir) if (not f.startswith('.') and  \
-    os.path.splitext(f)[1] not in ignore_suffix)]
+    os.path.splitext(f)[1] not in ignore_suffix) and os.path.isfile(os.path.join(exeDir,f))]
 
 
 #feature: terminalt after timeout begin
