@@ -186,7 +186,9 @@ def callProc(cmd, inStr, outStr, trial_run = False):
     #get rid of '\n\r' in windows
     realOutStr = realOutStr.strip(os.linesep)
 
-    #Right answers are inferior to errors
+    #print("DEBUG your output: {}, error: {}, expected: {}".format(realOutStr, errStr, outStr))
+
+    #error is prior to right anwser
     if errStr != '':
         result = 0
         return result,realOutStr,errStr
@@ -207,8 +209,8 @@ def callProc(cmd, inStr, outStr, trial_run = False):
 
     #timer expired accounted as TLE
     if len(f) == 1 and f[0] == 'expiry':
-        result = 0
-        errStr = "5s timer expired"
+        #result = 0
+        errStr = "5s timer expired, need to single re-run"
 
     return result,realOutStr,errStr
 
@@ -411,8 +413,8 @@ def execTest():
 
         #Just run case1 to load code into memory    
         for case in case_list:
-            s_input = case[1]
-            s_output = case[2]
+            s_input = case[1].strip()
+            s_output = case[2].strip()
             callProc(cmd, s_input, s_output, trial_run=True)
             break
 
@@ -479,16 +481,20 @@ def execTest():
 
         case_result.append(str(score))
         case_result.append(str(run_time))
+        if case_tle + case_wrong + case_error != 0:
+            state += '{}/{} failed, '.format(case_tle+case_wrong+case_error, case_total)
+
         if case_passed > 0 and case_passed < case_total:
-            state += '{} Passed:({}), '.format(case_passed, ', '.join(map(str, pass_case)))
+            #state += '{} Passed:({}), '.format(case_passed, ', '.join(map(str, pass_case)))
+            pass
         if case_tle > 0:
-            state += '{} TLE:({}), '.format(case_tle, ', '.join(map(str, tle_case)))
+            state += 'TLE:({}), '.format(', '.join(map(str, tle_case)))
         if case_wrong > 0:
-            state += '{} Wrong:({}), '.format(case_wrong, ', '.join(map(str, wrong_case)))
+            state += 'Wrong:({}), '.format(', '.join(map(str, wrong_case)))
         if case_error > 0:
-            state += '{} Error:({}), '.format(case_error, ', '.join(map(str, error_case)))
+            state += 'Error:({}), '.format(', '.join(map(str, error_case)))
         if case_passed == case_total:
-            state = "All {} cases passed!".format(case_total)
+            state = "All {}/{} cases passed!".format(case_total,case_total)
         case_result.append(state.strip(', '))
         case_result_list.append(case_result)
         print ""
