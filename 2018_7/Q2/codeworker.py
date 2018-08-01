@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 # -*- coding=utf-8 -*-
 
 import subprocess
@@ -11,6 +11,8 @@ from openpyxl.styles import PatternFill
 from openpyxl.utils import get_column_letter
 
 from six import string_types
+
+import line_counter
 
 Run_In_Detail = False
 
@@ -265,6 +267,10 @@ def execTest():
 
     print("Start processing...")
     os.chdir(exeDir)
+
+    #count file lines
+    my_counter = line_counter.My_Counter()
+
     # beging to loop everyone's code submission
     for exe_file in exe_file_list:
 
@@ -279,6 +285,7 @@ def execTest():
         language =  'N/A'
         compile_success = True
         state = ''
+
 
         cmd = []
 
@@ -392,6 +399,7 @@ def execTest():
             language = exe_file.split('.')[1]
             case_result.append("'{}'".format(exe_file))
             case_result.append(language)
+            case_result.append('N/A')
             case_result.append('0')
             case_result.append('N/A')
             case_result.append('Unsupport Error')
@@ -401,11 +409,13 @@ def execTest():
 
         case_result.append("{}".format(exe_file))
         case_result.append(language)
+        file_line = my_counter.count_lines(exe_file)
 
         if not compile_success:
             print ""
-            case_result.append(str(score))
+            case_result.append(file_line)
             case_result.append('N/A')
+            case_result.append(str(score))
             case_result.append('Compile_Error')
             case_result_list.append(case_result)
             print ""
@@ -476,10 +486,11 @@ def execTest():
         else:
             run_time = sum(time_used)/len(time_used)
 
+
         print "'{}' Result: {}/{} passed, {}/{} points, average {}ms"\
         .format(exe_file,case_passed,case_total,score,score_total,run_time)
 
-        case_result.append(str(score))
+        case_result.append(str(file_line))
         case_result.append(str(run_time))
         if case_tle + case_wrong + case_error != 0:
             state += '{}/{} failed, '.format(case_tle+case_wrong+case_error, case_total)
@@ -495,6 +506,8 @@ def execTest():
             state += 'Error:({}), '.format(', '.join(map(str, error_case)))
         if case_passed == case_total:
             state = "All {}/{} cases passed!".format(case_total,case_total)
+
+        case_result.append(str(score))
         case_result.append(state.strip(', '))
         case_result_list.append(case_result)
         print ""
@@ -505,8 +518,9 @@ def execTest():
     print "%-5s"%("Index"),
     print "%-35s"%("File_Name"),
     print "%-10s"%("Language"),
-    print "%-10s"%("Score"),
+    print "%-10s"%("Lines"),
     print "%-10s"%("Run_Time"),
+    print "%-10s"%("Score"),
     print "%-10s"%("State")
 
     pass_num = 0
@@ -549,7 +563,7 @@ def gen_report(res_list):
     ws_new = wb.create_sheet(sheet_name, 0)
 
     #get results
-    fields = ['Index', 'File_Name', 'Language', 'Score', 'Run_Time', 'State']
+    fields = ['Index', 'File_Name', 'Language', 'Lines', 'Run_Time', 'Score', 'State']
     ln_fields = len(fields)
     ln_res = len(res_list)
     #write results
