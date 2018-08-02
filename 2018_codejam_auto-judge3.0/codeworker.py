@@ -13,6 +13,7 @@ from openpyxl.utils import get_column_letter
 from six import string_types
 
 import line_counter
+import plagiarism_checker
 
 Run_In_Detail = False
 
@@ -217,7 +218,7 @@ def callProc(cmd, inStr, outStr, trial_run = False):
     return result,realOutStr,errStr
 
 
-def execTest():
+def execTest(exe_path, case_path):
     timeMsLimit = 1500    # 1000ms = 1S
     #These dir can be used only after the system environment configured.
     #Check out the readme to see how to set system environment variables.
@@ -228,8 +229,8 @@ def execTest():
     gccDir = 'gcc'
     gppDir = 'g++'    
     #Felix change the path begin    
-    exeDir      = os.path.join(os.getcwd(),'exe')
-    testCaseDir = os.path.join(os.getcwd(),'case')
+    exeDir      = exe_path
+    testCaseDir = case_path
     #Felix change the path end
 
     #Get all the to-be-test sourcecode/exe files
@@ -526,7 +527,7 @@ def execTest():
     pass_num = 0
     index = 0
     for item in case_result_list:
-        if 'All' in item[4]:
+        if 'All' in item[5]:
             pass_num += 1
         index += 1
         print "%-5s"%(str(index)),
@@ -609,12 +610,27 @@ if __name__ == '__main__':
     else:
         Run_In_Detail = False
 
-    res_list = execTest()
+    exe_path = os.path.join(os.getcwd(), 'exe')
+    case_path = os.path.join(os.getcwd(), 'case')
+    res_list = execTest(exe_path, case_path)
 
     n = raw_input("\nDo you want to generate/update the report? (y/n): \n(Close it if alreay opened by the Excel app)")
     if 'y' in n.strip() or n.strip() == 'Y':
         gen_report(res_list)
     else:
+        pass
+
+    n = raw_input("\nDo you want a plagiarism check? (y/n):")
+    if 'y' in n.strip() or n.strip() == 'Y':
+        pc = plagiarism_checker.Plagiarism_Checker()
+        sim_pairs = pc.check_folder(exe_path)
+
+        if len(sim_pairs)>0:
+            print("Found similar files: {}".format(sim_pairs))
+        else:
+            print("No similar files")
+    else:
+        print("skipped check")
         pass
 
 
